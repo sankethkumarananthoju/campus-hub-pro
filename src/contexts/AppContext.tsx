@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry } from '@/types';
+import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry, SubjectMaster } from '@/types';
 
 interface AppContextType {
   currentRole: UserRole;
@@ -19,6 +19,8 @@ interface AppContextType {
   addTimetableEntry: (entry: Omit<TimetableEntry, 'id'>) => void;
   updateTimetableEntry: (id: string, entry: Partial<TimetableEntry>) => void;
   deleteTimetableEntry: (id: string) => void;
+  subjectsByYear: SubjectMaster[];
+  updateSubjectsByYear: (subjects: SubjectMaster[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -90,6 +92,57 @@ const defaultPeriodTimings: PeriodTiming[] = [
 
 const mockTimetableEntries: TimetableEntry[] = [];
 
+const defaultSubjectsByYear: SubjectMaster[] = [
+  {
+    year: 1,
+    subjects: [
+      'Engineering Mathematics I',
+      'Engineering Physics',
+      'Engineering Chemistry',
+      'Programming in C',
+      'Engineering Graphics',
+      'Communication Skills',
+      'Basic Electrical Engineering'
+    ]
+  },
+  {
+    year: 2,
+    subjects: [
+      'Data Structures',
+      'Digital Electronics',
+      'Computer Organization',
+      'Discrete Mathematics',
+      'Object Oriented Programming',
+      'Database Management Systems',
+      'Computer Networks'
+    ]
+  },
+  {
+    year: 3,
+    subjects: [
+      'Operating Systems',
+      'Software Engineering',
+      'Web Technologies',
+      'Design and Analysis of Algorithms',
+      'Theory of Computation',
+      'Compiler Design',
+      'Computer Graphics'
+    ]
+  },
+  {
+    year: 4,
+    subjects: [
+      'Machine Learning',
+      'Artificial Intelligence',
+      'Cloud Computing',
+      'Big Data Analytics',
+      'Cyber Security',
+      'Mobile Application Development',
+      'Project Work'
+    ]
+  }
+];
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
   const [passRequests, setPassRequests] = useState<PassRequest[]>(mockPassRequests);
@@ -97,6 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [submissions, setSubmissions] = useState<Submission[]>(mockSubmissions);
   const [periodTimings, setPeriodTimings] = useState<PeriodTiming[]>(defaultPeriodTimings);
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>(mockTimetableEntries);
+  const [subjectsByYear, setSubjectsByYear] = useState<SubjectMaster[]>(defaultSubjectsByYear);
 
   // Simulate current user based on role
   const getCurrentUser = () => {
@@ -172,6 +226,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTimetableEntries(prev => prev.filter(item => item.id !== id));
   };
 
+  const updateSubjectsByYear = (subjects: SubjectMaster[]) => {
+    setSubjectsByYear(subjects);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -191,7 +249,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         timetableEntries,
         addTimetableEntry,
         updateTimetableEntry,
-        deleteTimetableEntry
+        deleteTimetableEntry,
+        subjectsByYear,
+        updateSubjectsByYear
       }}
     >
       {children}

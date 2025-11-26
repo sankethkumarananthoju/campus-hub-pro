@@ -14,11 +14,13 @@ import { toast } from 'sonner';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
 export function TimetableManager() {
-  const { periodTimings, timetableEntries, addTimetableEntry, deleteTimetableEntry } = useApp();
+  const { periodTimings, timetableEntries, addTimetableEntry, deleteTimetableEntry, subjectsByYear } = useApp();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<typeof DAYS[number]>('Monday');
+  const [selectedYear, setSelectedYear] = useState<1 | 2 | 3 | 4>(1);
   const [newEntry, setNewEntry] = useState({
     classID: '',
+    year: 1 as 1 | 2 | 3 | 4,
     dayOfWeek: 'Monday' as typeof DAYS[number],
     periodNumber: 1,
     subject: '',
@@ -27,6 +29,7 @@ export function TimetableManager() {
   });
 
   const teachingPeriods = periodTimings.filter(p => !p.isBreak);
+  const availableSubjects = subjectsByYear.find(s => s.year === newEntry.year)?.subjects || [];
 
   const handleAddEntry = () => {
     if (!newEntry.classID || !newEntry.subject || !newEntry.teacherName) {
@@ -39,6 +42,7 @@ export function TimetableManager() {
     setIsDialogOpen(false);
     setNewEntry({
       classID: '',
+      year: 1,
       dayOfWeek: 'Monday',
       periodNumber: 1,
       subject: '',
@@ -53,7 +57,7 @@ export function TimetableManager() {
   };
 
   const getEntriesForDay = (day: typeof DAYS[number]) => {
-    return timetableEntries.filter(entry => entry.dayOfWeek === day);
+    return timetableEntries.filter(entry => entry.dayOfWeek === day && entry.year === selectedYear);
   };
 
   return (
@@ -79,6 +83,23 @@ export function TimetableManager() {
                 <DialogTitle>Add Timetable Entry</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Academic Year</Label>
+                  <Select
+                    value={newEntry.year.toString()}
+                    onValueChange={(value) => setNewEntry({ ...newEntry, year: parseInt(value) as 1 | 2 | 3 | 4, subject: '' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1st Year</SelectItem>
+                      <SelectItem value="2">2nd Year</SelectItem>
+                      <SelectItem value="3">3rd Year</SelectItem>
+                      <SelectItem value="4">4th Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="space-y-2">
                   <Label>Class ID</Label>
                   <Input
@@ -123,11 +144,19 @@ export function TimetableManager() {
                 </div>
                 <div className="space-y-2">
                   <Label>Subject</Label>
-                  <Input
-                    placeholder="e.g., Data Structures"
+                  <Select
                     value={newEntry.subject}
-                    onChange={(e) => setNewEntry({ ...newEntry, subject: e.target.value })}
-                  />
+                    onValueChange={(value) => setNewEntry({ ...newEntry, subject: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableSubjects.map(subject => (
+                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Teacher Name</Label>
@@ -147,16 +176,33 @@ export function TimetableManager() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <Select value={selectedDay} onValueChange={(value) => setSelectedDay(value as typeof DAYS[number])}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DAYS.map(day => (
-                <SelectItem key={day} value={day}>{day}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-4">
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(value) => setSelectedYear(parseInt(value) as 1 | 2 | 3 | 4)}
+            >
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1st Year</SelectItem>
+                <SelectItem value="2">2nd Year</SelectItem>
+                <SelectItem value="3">3rd Year</SelectItem>
+                <SelectItem value="4">4th Year</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedDay} onValueChange={(value) => setSelectedDay(value as typeof DAYS[number])}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DAYS.map(day => (
+                  <SelectItem key={day} value={day}>{day}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="border rounded-lg overflow-hidden">
             <Table>
@@ -174,7 +220,7 @@ export function TimetableManager() {
                 {getEntriesForDay(selectedDay).length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      No timetable entries for {selectedDay}
+                      No timetable entries for Year {selectedYear} - {selectedDay}
                     </TableCell>
                   </TableRow>
                 ) : (

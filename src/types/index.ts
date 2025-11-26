@@ -69,9 +69,15 @@ export interface PeriodTiming {
 export interface TimetableEntry {
   id: string;
   classID: string;
+  year: 1 | 2 | 3 | 4;
   dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
   periodNumber: number;
   subject: string;
   teacherID: string;
   teacherName: string;
+}
+
+export interface SubjectMaster {
+  year: 1 | 2 | 3 | 4;
+  subjects: string[];
 }
