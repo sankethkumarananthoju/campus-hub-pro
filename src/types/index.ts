@@ -75,6 +75,7 @@ export interface TimetableEntry {
   subject: string;
   teacherID: string;
   teacherName: string;
+  teacherContact?: string;
 }
 
 export interface SubjectMaster {
