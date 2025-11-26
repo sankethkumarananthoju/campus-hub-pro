@@ -321,7 +321,6 @@ export function TimetableManager() {
                   <TableHeader>
                     <TableRow className="bg-muted/50">
                       <TableHead>Subject</TableHead>
-                      <TableHead>Class ID</TableHead>
                       <TableHead>Faculty Name</TableHead>
                       <TableHead>Contact Number</TableHead>
                     </TableRow>
@@ -330,7 +329,6 @@ export function TimetableManager() {
                     {getUniqueSubjectsAndTeachers().map((item, idx) => (
                       <TableRow key={idx}>
                         <TableCell className="font-medium">{item.subject}</TableCell>
-                        <TableCell>{item.classID}</TableCell>
                         <TableCell>{item.teacherName}</TableCell>
                         <TableCell>{item.teacherContact}</TableCell>
                       </TableRow>
