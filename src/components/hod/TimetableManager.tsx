@@ -61,6 +61,29 @@ export function TimetableManager() {
     return timetableEntries.filter(entry => entry.dayOfWeek === day && entry.year === selectedYear);
   };
 
+  const getEntryForDayAndPeriod = (day: typeof DAYS[number], periodNumber: number) => {
+    return timetableEntries.find(
+      entry => entry.dayOfWeek === day && entry.periodNumber === periodNumber && entry.year === selectedYear
+    );
+  };
+
+  const getUniqueSubjectsAndTeachers = () => {
+    const yearEntries = timetableEntries.filter(entry => entry.year === selectedYear);
+    const subjectTeacherMap = new Map();
+    
+    yearEntries.forEach(entry => {
+      if (!subjectTeacherMap.has(entry.subject)) {
+        subjectTeacherMap.set(entry.subject, {
+          subject: entry.subject,
+          teacherName: entry.teacherName,
+          classID: entry.classID
+        });
+      }
+    });
+    
+    return Array.from(subjectTeacherMap.values());
+  };
+
   const handleExportPDF = () => {
     exportTimetableToPDF(timetableEntries, periodTimings, selectedYear);
     toast.success('Timetable exported successfully');
@@ -187,7 +210,7 @@ export function TimetableManager() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex gap-4">
             <Select
               value={selectedYear.toString()}
@@ -203,66 +226,92 @@ export function TimetableManager() {
                 <SelectItem value="4">4th Year</SelectItem>
               </SelectContent>
             </Select>
-            
-            <Select value={selectedDay} onValueChange={(value) => setSelectedDay(value as typeof DAYS[number])}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DAYS.map(day => (
-                  <SelectItem key={day} value={day}>{day}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          {/* Grid-based Timetable View */}
+          <div className="border rounded-lg overflow-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Period</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-bold border-r w-24">Day / Period</TableHead>
+                  {periodTimings.map((period) => (
+                    <TableHead key={period.id} className="text-center border-r min-w-32">
+                      <div className="font-bold">{period.label}</div>
+                      <div className="text-xs text-muted-foreground font-normal">
+                        {period.startTime} - {period.endTime}
+                      </div>
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {getEntriesForDay(selectedDay).length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      No timetable entries for Year {selectedYear} - {selectedDay}
-                    </TableCell>
+                {DAYS.map((day) => (
+                  <TableRow key={day} className="hover:bg-muted/30">
+                    <TableCell className="font-bold border-r bg-muted/30">{day.toUpperCase()}</TableCell>
+                    {periodTimings.map((period) => {
+                      const entry = getEntryForDayAndPeriod(day, period.periodNumber);
+                      return (
+                        <TableCell 
+                          key={`${day}-${period.id}`} 
+                          className={`text-center border-r relative group ${
+                            period.isBreak ? 'bg-muted/20' : ''
+                          }`}
+                        >
+                          {period.isBreak ? (
+                            <span className="text-xs text-muted-foreground font-medium">BREAK</span>
+                          ) : entry ? (
+                            <div className="space-y-1 py-2">
+                              <div className="font-semibold text-sm">{entry.subject}</div>
+                              <div className="text-xs text-muted-foreground">{entry.classID}</div>
+                              {entry && !period.isBreak && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDelete(entry.id)}
+                                >
+                                  <Trash2 className="h-3 w-3 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
-                ) : (
-                  getEntriesForDay(selectedDay).map((entry) => {
-                    const period = periodTimings.find(p => p.periodNumber === entry.periodNumber);
-                    return (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">{period?.label}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {period?.startTime} - {period?.endTime}
-                        </TableCell>
-                        <TableCell>{entry.classID}</TableCell>
-                        <TableCell>{entry.subject}</TableCell>
-                        <TableCell>{entry.teacherName}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(entry.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
+                ))}
               </TableBody>
             </Table>
           </div>
+
+          {/* Subject Legend */}
+          {getUniqueSubjectsAndTeachers().length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm">Subject Details & Faculty Information</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Class ID</TableHead>
+                      <TableHead>Faculty Name</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getUniqueSubjectsAndTeachers().map((item, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">{item.subject}</TableCell>
+                        <TableCell>{item.classID}</TableCell>
+                        <TableCell>{item.teacherName}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
