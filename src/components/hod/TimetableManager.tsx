@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TimetableEntry } from '@/types';
-import { Calendar, Plus, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportTimetableToPDF } from '@/utils/pdfExport';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
@@ -60,6 +61,11 @@ export function TimetableManager() {
     return timetableEntries.filter(entry => entry.dayOfWeek === day && entry.year === selectedYear);
   };
 
+  const handleExportPDF = () => {
+    exportTimetableToPDF(timetableEntries, periodTimings, selectedYear);
+    toast.success('Timetable exported successfully');
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,13 +77,18 @@ export function TimetableManager() {
             </CardTitle>
             <CardDescription>Create and manage the weekly schedule for all classes</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Entry
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportPDF}>
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Entry
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Add Timetable Entry</DialogTitle>
@@ -172,6 +183,7 @@ export function TimetableManager() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
