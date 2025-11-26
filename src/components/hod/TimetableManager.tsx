@@ -26,7 +26,8 @@ export function TimetableManager() {
     periodNumber: 1,
     subject: '',
     teacherID: '',
-    teacherName: ''
+    teacherName: '',
+    teacherContact: ''
   });
 
   const teachingPeriods = periodTimings.filter(p => !p.isBreak);
@@ -48,8 +49,20 @@ export function TimetableManager() {
       periodNumber: 1,
       subject: '',
       teacherID: '',
-      teacherName: ''
+      teacherName: '',
+      teacherContact: ''
     });
+  };
+
+  const handleCellClick = (day: typeof DAYS[number], periodNumber: number, isBreak: boolean) => {
+    if (isBreak) return;
+    setNewEntry({
+      ...newEntry,
+      dayOfWeek: day,
+      periodNumber: periodNumber,
+      year: selectedYear
+    });
+    setIsDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -76,7 +89,8 @@ export function TimetableManager() {
         subjectTeacherMap.set(entry.subject, {
           subject: entry.subject,
           teacherName: entry.teacherName,
-          classID: entry.classID
+          classID: entry.classID,
+          teacherContact: entry.teacherContact || 'N/A'
         });
       }
     });
@@ -200,6 +214,14 @@ export function TimetableManager() {
                     onChange={(e) => setNewEntry({ ...newEntry, teacherName: e.target.value })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Teacher Contact</Label>
+                  <Input
+                    placeholder="e.g., +91 9876543210"
+                    value={newEntry.teacherContact}
+                    onChange={(e) => setNewEntry({ ...newEntry, teacherContact: e.target.value })}
+                  />
+                </div>
                 <Button onClick={handleAddEntry} className="w-full">
                   Add Entry
                 </Button>
@@ -254,8 +276,9 @@ export function TimetableManager() {
                         <TableCell 
                           key={`${day}-${period.id}`} 
                           className={`text-center border-r relative group ${
-                            period.isBreak ? 'bg-muted/20' : ''
+                            period.isBreak ? 'bg-muted/20' : 'cursor-pointer hover:bg-accent/50'
                           }`}
+                          onClick={() => !entry && handleCellClick(day, period.periodNumber, period.isBreak)}
                         >
                           {period.isBreak ? (
                             <span className="text-xs text-muted-foreground font-medium">BREAK</span>
@@ -268,14 +291,17 @@ export function TimetableManager() {
                                   variant="ghost"
                                   size="sm"
                                   className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleDelete(entry.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(entry.id);
+                                  }}
                                 >
                                   <Trash2 className="h-3 w-3 text-destructive" />
                                 </Button>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
+                            <span className="text-xs text-muted-foreground">+ Add</span>
                           )}
                         </TableCell>
                       );
@@ -297,6 +323,7 @@ export function TimetableManager() {
                       <TableHead>Subject</TableHead>
                       <TableHead>Class ID</TableHead>
                       <TableHead>Faculty Name</TableHead>
+                      <TableHead>Contact Number</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -305,6 +332,7 @@ export function TimetableManager() {
                         <TableCell className="font-medium">{item.subject}</TableCell>
                         <TableCell>{item.classID}</TableCell>
                         <TableCell>{item.teacherName}</TableCell>
+                        <TableCell>{item.teacherContact}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
