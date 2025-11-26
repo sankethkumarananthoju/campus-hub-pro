@@ -1,7 +1,11 @@
 import { PassApprovalQueue } from '@/components/teacher/PassApprovalQueue';
 import { PerformanceAnalytics } from '@/components/hod/PerformanceAnalytics';
+import { CreateAssignment } from '@/components/teacher/CreateAssignment';
+import { PeriodTimingManager } from '@/components/hod/PeriodTimingManager';
+import { TimetableManager } from '@/components/hod/TimetableManager';
 import { useApp } from '@/contexts/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Users, TrendingUp } from 'lucide-react';
 
 export default function HODView() {
@@ -62,8 +66,31 @@ export default function HODView() {
           </Card>
         </div>
 
-        <PassApprovalQueue />
-        <PerformanceAnalytics />
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="timetable">Timetable</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="passes">Pass Requests</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <PerformanceAnalytics />
+          </TabsContent>
+
+          <TabsContent value="timetable" className="space-y-6">
+            <PeriodTimingManager />
+            <TimetableManager />
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-6">
+            <CreateAssignment />
+          </TabsContent>
+
+          <TabsContent value="passes" className="space-y-6">
+            <PassApprovalQueue />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

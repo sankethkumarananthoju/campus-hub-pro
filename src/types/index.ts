@@ -56,3 +56,22 @@ export interface PerformanceData {
   completedAssignments: number;
   trend: 'improving' | 'declining' | 'stable';
 }
+
+export interface PeriodTiming {
+  id: string;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  isBreak: boolean;
+  label: string;
+}
+
+export interface TimetableEntry {
+  id: string;
+  classID: string;
+  dayOfWeek: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+  periodNumber: number;
+  subject: string;
+  teacherID: string;
+  teacherName: string;
+}
