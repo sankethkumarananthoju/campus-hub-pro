@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UserRole, PassRequest, Assignment, Submission } from '@/types';
+import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry } from '@/types';
 
 interface AppContextType {
   currentRole: UserRole;
@@ -13,6 +13,12 @@ interface AppContextType {
   addAssignment: (assignment: Omit<Assignment, 'id' | 'createdAt'>) => void;
   submissions: Submission[];
   addSubmission: (submission: Omit<Submission, 'id' | 'correctedTime'>) => void;
+  periodTimings: PeriodTiming[];
+  updatePeriodTimings: (timings: PeriodTiming[]) => void;
+  timetableEntries: TimetableEntry[];
+  addTimetableEntry: (entry: Omit<TimetableEntry, 'id'>) => void;
+  updateTimetableEntry: (id: string, entry: Partial<TimetableEntry>) => void;
+  deleteTimetableEntry: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -70,11 +76,27 @@ const mockAssignments: Assignment[] = [
 
 const mockSubmissions: Submission[] = [];
 
+const defaultPeriodTimings: PeriodTiming[] = [
+  { id: 'P1', periodNumber: 1, startTime: '08:45', endTime: '09:35', isBreak: false, label: '1st Period' },
+  { id: 'P2', periodNumber: 2, startTime: '09:35', endTime: '10:25', isBreak: false, label: '2nd Period' },
+  { id: 'B1', periodNumber: 3, startTime: '10:25', endTime: '10:40', isBreak: true, label: 'Break' },
+  { id: 'P3', periodNumber: 4, startTime: '10:40', endTime: '11:30', isBreak: false, label: '3rd Period' },
+  { id: 'P4', periodNumber: 5, startTime: '11:30', endTime: '12:20', isBreak: false, label: '4th Period' },
+  { id: 'P5', periodNumber: 6, startTime: '12:20', endTime: '13:10', isBreak: false, label: '5th Period' },
+  { id: 'B2', periodNumber: 7, startTime: '13:10', endTime: '14:00', isBreak: true, label: 'Lunch Break' },
+  { id: 'P6', periodNumber: 8, startTime: '14:00', endTime: '14:45', isBreak: false, label: '6th Period' },
+  { id: 'P7', periodNumber: 9, startTime: '14:45', endTime: '15:30', isBreak: false, label: '7th Period' },
+];
+
+const mockTimetableEntries: TimetableEntry[] = [];
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
   const [passRequests, setPassRequests] = useState<PassRequest[]>(mockPassRequests);
   const [assignments, setAssignments] = useState<Assignment[]>(mockAssignments);
   const [submissions, setSubmissions] = useState<Submission[]>(mockSubmissions);
+  const [periodTimings, setPeriodTimings] = useState<PeriodTiming[]>(defaultPeriodTimings);
+  const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>(mockTimetableEntries);
 
   // Simulate current user based on role
   const getCurrentUser = () => {
@@ -128,6 +150,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSubmissions(prev => [newSubmission, ...prev]);
   };
 
+  const updatePeriodTimings = (timings: PeriodTiming[]) => {
+    setPeriodTimings(timings);
+  };
+
+  const addTimetableEntry = (entry: Omit<TimetableEntry, 'id'>) => {
+    const newEntry: TimetableEntry = {
+      ...entry,
+      id: `TT${Date.now()}`
+    };
+    setTimetableEntries(prev => [...prev, newEntry]);
+  };
+
+  const updateTimetableEntry = (id: string, entry: Partial<TimetableEntry>) => {
+    setTimetableEntries(prev =>
+      prev.map(item => (item.id === id ? { ...item, ...entry } : item))
+    );
+  };
+
+  const deleteTimetableEntry = (id: string) => {
+    setTimetableEntries(prev => prev.filter(item => item.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -141,7 +185,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         assignments,
         addAssignment,
         submissions,
-        addSubmission
+        addSubmission,
+        periodTimings,
+        updatePeriodTimings,
+        timetableEntries,
+        addTimetableEntry,
+        updateTimetableEntry,
+        deleteTimetableEntry
       }}
     >
       {children}
