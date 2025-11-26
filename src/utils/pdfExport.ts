@@ -34,16 +34,14 @@ export function exportTimetableToPDF(
     return yearMatch && classMatch;
   });
   
-  // Create table headers
-  const headers = ['Period', ...DAYS];
+  // Create table headers - periods as columns
+  const headers = ['Day', ...teachingPeriods.map(p => `${p.label}\n${p.startTime}-${p.endTime}`)];
   
-  // Create table body
-  const tableBody = teachingPeriods.map(period => {
-    const row = [
-      `${period.label}\n${period.startTime} - ${period.endTime}`
-    ];
+  // Create table body - days as rows
+  const tableBody = DAYS.map(day => {
+    const row = [day];
     
-    DAYS.forEach(day => {
+    teachingPeriods.forEach(period => {
       const entry = filteredEntries.find(
         e => e.dayOfWeek === day && e.periodNumber === period.periodNumber
       );
@@ -61,7 +59,7 @@ export function exportTimetableToPDF(
     return row;
   });
   
-  // Generate table
+  // Generate main timetable
   autoTable(doc, {
     head: [headers],
     body: tableBody,
@@ -72,26 +70,72 @@ export function exportTimetableToPDF(
       cellPadding: 4,
       valign: 'middle',
       halign: 'center',
-      lineColor: [44, 62, 80],
-      lineWidth: 0.5
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5,
+      textColor: [0, 0, 0],
+      fillColor: [255, 255, 255]
     },
     headStyles: {
-      fillColor: [26, 188, 156],
-      textColor: [255, 255, 255],
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
       fontStyle: 'bold',
-      fontSize: 10
+      fontSize: 10,
+      lineColor: [0, 0, 0],
+      lineWidth: 0.5
     },
     columnStyles: {
       0: { 
-        cellWidth: 35,
+        cellWidth: 30,
         fontStyle: 'bold',
-        fillColor: [240, 240, 240]
+        fillColor: [255, 255, 255]
       }
-    },
-    alternateRowStyles: {
-      fillColor: [250, 250, 250]
     }
   });
+  
+  // Get unique subjects and teacher information
+  const teacherInfoMap = new Map<string, { subject: string; teacherName: string; teacherContact: string }>();
+  filteredEntries.forEach(entry => {
+    if (!teacherInfoMap.has(entry.subject)) {
+      teacherInfoMap.set(entry.subject, {
+        subject: entry.subject,
+        teacherName: entry.teacherName,
+        teacherContact: entry.teacherContact || 'N/A'
+      });
+    }
+  });
+  
+  const teacherInfo = Array.from(teacherInfoMap.values());
+  
+  // Add teacher information table if there are entries
+  if (teacherInfo.length > 0) {
+    const finalY = (doc as any).lastAutoTable.finalY || 30;
+    
+    autoTable(doc, {
+      head: [['Subject', 'Faculty Name', 'Contact Number']],
+      body: teacherInfo.map(info => [info.subject, info.teacherName, info.teacherContact]),
+      startY: finalY + 10,
+      theme: 'grid',
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+        valign: 'middle',
+        halign: 'left',
+        lineColor: [0, 0, 0],
+        lineWidth: 0.5,
+        textColor: [0, 0, 0],
+        fillColor: [255, 255, 255]
+      },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 10,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.5,
+        halign: 'center'
+      }
+    });
+  }
   
   // Add footer with generation date
   const pageCount = doc.getNumberOfPages();
