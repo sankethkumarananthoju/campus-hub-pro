@@ -142,12 +142,12 @@ export function TeacherProfile() {
 
                 <div className="space-y-2">
                   <Label>Section (Optional)</Label>
-                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <Select value={selectedClass || "_all"} onValueChange={(val) => setSelectedClass(val === "_all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select Section" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border">
-                      <SelectItem value="">All Sections</SelectItem>
+                      <SelectItem value="_all">All Sections</SelectItem>
                       {classes.map(cls => (
                         <SelectItem key={cls} value={cls}>
                           Section {cls}

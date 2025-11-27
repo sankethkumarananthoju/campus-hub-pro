@@ -103,12 +103,12 @@ export function AddTeacher() {
             </div>
             <div className="space-y-2">
               <Label>Assign Year (Optional)</Label>
-              <Select value={selectedYear} onValueChange={handleYearChange}>
+              <Select value={selectedYear || "_none"} onValueChange={(val) => handleYearChange(val === "_none" ? "" : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Year" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border">
-                  <SelectItem value="">Not Assigned</SelectItem>
+                  <SelectItem value="_none">Not Assigned</SelectItem>
                   {years.map(year => (
                     <SelectItem key={year} value={year.toString()}>
                       Year {year}
@@ -120,15 +120,15 @@ export function AddTeacher() {
             <div className="space-y-2 md:col-span-2">
               <Label>Assign Subject (Optional)</Label>
               <Select 
-                value={selectedSubject} 
-                onValueChange={setSelectedSubject}
+                value={selectedSubject || "_none"} 
+                onValueChange={(val) => setSelectedSubject(val === "_none" ? "" : val)}
                 disabled={!selectedYear}
               >
                 <SelectTrigger>
                   <SelectValue placeholder={selectedYear ? "Select Subject" : "Select year first"} />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border max-h-60">
-                  <SelectItem value="">Not Assigned</SelectItem>
+                  <SelectItem value="_none">Not Assigned</SelectItem>
                   {selectedYear && getSubjectsForYear(parseInt(selectedYear)).map(subject => (
                     <SelectItem key={subject} value={subject}>
                       {subject}
