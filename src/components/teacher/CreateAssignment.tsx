@@ -7,13 +7,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { FilePlus, Plus, Trash2 } from 'lucide-react';
+import { FilePlus, Plus, Trash2, GraduationCap } from 'lucide-react';
 import { Question } from '@/types';
+
+// Classes organized by year
+const classesByYear: Record<number, string[]> = {
+  1: ['CS-1A', 'CS-1B', 'CS-1C'],
+  2: ['CS-2A', 'CS-2B', 'CS-2C'],
+  3: ['CS-3A', 'CS-3B', 'CS-3C'],
+  4: ['CS-4A', 'CS-4B', 'CS-4C'],
+};
 
 export function CreateAssignment() {
   const { currentUserID, currentUserName, addAssignment } = useApp();
   const { toast } = useToast();
   
+  const [selectedYear, setSelectedYear] = useState<string>('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [classID, setClassID] = useState('');
@@ -21,6 +30,8 @@ export function CreateAssignment() {
   const [questions, setQuestions] = useState<Partial<Question>[]>([
     { type: 'multiple-choice', question: '', correctAnswer: '', points: 10, options: ['', '', '', ''] }
   ]);
+
+  const availableClasses = selectedYear ? classesByYear[parseInt(selectedYear)] || [] : [];
 
   const addQuestion = () => {
     setQuestions([
@@ -47,13 +58,18 @@ export function CreateAssignment() {
     setQuestions(updated);
   };
 
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    setClassID(''); // Reset class when year changes
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!title || !classID || !dueDate || questions.length === 0) {
+    if (!title || !selectedYear || !classID || !dueDate || questions.length === 0) {
       toast({
         title: 'Error',
-        description: 'Please fill in all required fields',
+        description: 'Please fill in all required fields including year and class',
         variant: 'destructive'
       });
       return;
@@ -74,12 +90,13 @@ export function CreateAssignment() {
 
     toast({
       title: 'Assignment Created',
-      description: `${title} has been posted to ${classID}`,
+      description: `${title} has been posted to Year ${selectedYear} - ${classID}`,
     });
 
     // Reset form
     setTitle('');
     setDescription('');
+    setSelectedYear('');
     setClassID('');
     setDueDate('');
     setQuestions([{ type: 'multiple-choice', question: '', correctAnswer: '', points: 10, options: ['', '', '', ''] }]);
@@ -111,17 +128,56 @@ export function CreateAssignment() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="class">Class</Label>
-              <Select value={classID} onValueChange={setClassID}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CS-2A">CS-2A</SelectItem>
-                  <SelectItem value="CS-2B">CS-2B</SelectItem>
-                  <SelectItem value="CS-3A">CS-3A</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="dueDate">Due Date</Label>
+              <Input
+                id="dueDate"
+                type="datetime-local"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Year and Class Selection */}
+          <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
+            <div className="flex items-center gap-2 mb-4">
+              <GraduationCap className="h-4 w-4 text-primary" />
+              <Label className="font-medium">Target Students</Label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="year">Select Year *</Label>
+                <Select value={selectedYear} onValueChange={handleYearChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose year first" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Year 1 (1st Year)</SelectItem>
+                    <SelectItem value="2">Year 2 (2nd Year)</SelectItem>
+                    <SelectItem value="3">Year 3 (3rd Year)</SelectItem>
+                    <SelectItem value="4">Year 4 (4th Year)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="class">Select Class *</Label>
+                <Select 
+                  value={classID} 
+                  onValueChange={setClassID}
+                  disabled={!selectedYear}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={selectedYear ? "Select class" : "Select year first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableClasses.map((cls) => (
+                      <SelectItem key={cls} value={cls}>
+                        {cls}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -133,16 +189,6 @@ export function CreateAssignment() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the assignment"
               rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date</Label>
-            <Input
-              id="dueDate"
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
             />
           </div>
 

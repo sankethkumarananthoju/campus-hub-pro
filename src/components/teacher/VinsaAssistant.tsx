@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { VinsaAvatar } from './VinsaAvatar';
 import { useVinsaAI } from '@/hooks/useVinsaAI';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -41,6 +41,17 @@ export function VinsaAssistant() {
   const [generatedQuestions, setGeneratedQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Set<string>>(new Set());
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or when typing
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
+    }
+  }, [messages, isChatting, isLoading]);
 
   const allSubjects = subjectsByYear.flatMap((y) => y.subjects);
   const filteredSubjects = selectedYear
@@ -415,7 +426,7 @@ export function VinsaAssistant() {
       <div className="lg:col-span-2 space-y-4">
         {/* Chat Area */}
         <div className="glass rounded-2xl overflow-hidden vinsa-border-gradient">
-          <ScrollArea className="h-[400px] p-4">
+          <ScrollArea className="h-[400px] p-4" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((message) => (
                 <div

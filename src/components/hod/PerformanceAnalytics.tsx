@@ -1,24 +1,47 @@
+import { useState } from 'react';
 import { useApp } from '@/contexts/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { TrendingUp, TrendingDown, Minus, BarChart3, GraduationCap } from 'lucide-react';
 import { PerformanceData } from '@/types';
 
-export function PerformanceAnalytics() {
-  const { submissions } = useApp();
+// Helper to extract year from classID (e.g., "CS-2A" -> 2)
+const getYearFromClassID = (classID: string): number => {
+  const match = classID.match(/(\d)/);
+  return match ? parseInt(match[1]) : 0;
+};
 
-  // Calculate performance data for all students
+export function PerformanceAnalytics() {
+  const { submissions, assignments } = useApp();
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+
+  // Get assignment classIDs map for filtering
+  const assignmentClassMap = new Map<string, string>();
+  assignments.forEach(a => assignmentClassMap.set(a.id, a.classID));
+
+  // Calculate performance data for students filtered by year
   const calculatePerformance = (): PerformanceData[] => {
-    const studentMap = new Map<string, { total: number; count: number; name: string; scores: number[] }>();
+    const studentMap = new Map<string, { total: number; count: number; name: string; scores: number[]; year: number }>();
 
     submissions.forEach(sub => {
+      const classID = assignmentClassMap.get(sub.assignmentID) || '';
+      const year = getYearFromClassID(classID);
+      
+      // Filter by year if selected
+      if (selectedYear !== 'all' && year !== parseInt(selectedYear)) {
+        return;
+      }
+
       if (!studentMap.has(sub.studentID)) {
         studentMap.set(sub.studentID, {
           total: 0,
           count: 0,
           name: sub.studentName,
-          scores: []
+          scores: [],
+          year
         });
       }
       const student = studentMap.get(sub.studentID)!;
@@ -74,19 +97,43 @@ export function PerformanceAnalytics() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <BarChart3 className="h-5 w-5 text-primary" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <BarChart3 className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Weekly Performance Analytics</CardTitle>
+              <CardDescription>Student performance overview and trends</CardDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle>Weekly Performance Analytics</CardTitle>
-            <CardDescription>Student performance overview and trends</CardDescription>
+          
+          {/* Year Filter */}
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <Label className="text-sm text-muted-foreground">Year:</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Select Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                <SelectItem value="1">Year 1</SelectItem>
+                <SelectItem value="2">Year 2</SelectItem>
+                <SelectItem value="3">Year 3</SelectItem>
+                <SelectItem value="4">Year 4</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {performanceData.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No performance data available</p>
+          <p className="text-center text-muted-foreground py-8">
+            {selectedYear !== 'all' 
+              ? `No performance data available for Year ${selectedYear}` 
+              : 'No performance data available'}
+          </p>
         ) : (
           <div className="rounded-lg border">
             <Table>
