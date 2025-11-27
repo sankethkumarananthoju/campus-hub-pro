@@ -1,5 +1,9 @@
 import { PassApprovalQueue } from '@/components/teacher/PassApprovalQueue';
 import { CreateAssignment } from '@/components/teacher/CreateAssignment';
+import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
+import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClipboardCheck, FileText, Sparkles, BookOpen } from 'lucide-react';
 
 export default function TeacherView() {
   return (
@@ -7,11 +11,45 @@ export default function TeacherView() {
       <div className="container mx-auto p-6 space-y-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
-          <p className="text-muted-foreground">Approve passes and create assignments for your classes</p>
+          <p className="text-muted-foreground">Manage passes, assignments, and use VINSA AI Assistant</p>
         </div>
 
-        <PassApprovalQueue />
-        <CreateAssignment />
+        <Tabs defaultValue="vinsa" className="space-y-6">
+          <TabsList className="glass">
+            <TabsTrigger value="vinsa" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              VINSA Assistant
+            </TabsTrigger>
+            <TabsTrigger value="question-bank" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              Question Bank
+            </TabsTrigger>
+            <TabsTrigger value="passes" className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4" />
+              Pass Requests
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Create Assignment
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="vinsa">
+            <VinsaAssistant />
+          </TabsContent>
+
+          <TabsContent value="question-bank">
+            <QuestionBankViewer />
+          </TabsContent>
+
+          <TabsContent value="passes">
+            <PassApprovalQueue />
+          </TabsContent>
+
+          <TabsContent value="assignments">
+            <CreateAssignment />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
