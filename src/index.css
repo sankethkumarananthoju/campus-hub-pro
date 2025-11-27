@@ -50,20 +50,21 @@ All colors MUST be HSL.
     --shadow-medium: 0 4px 16px -4px hsl(215 25% 15% / 0.12);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
+    /* VINSA Glassmorphism Variables */
+    --vinsa-cyan: 187 100% 50%;
+    --vinsa-purple: 270 70% 60%;
+    --vinsa-gradient: linear-gradient(135deg, hsl(187 100% 50%), hsl(270 70% 60%));
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.3;
+    --glass-blur: 12px;
+
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -101,6 +102,13 @@ All colors MUST be HSL.
     --border: 215 20% 24%;
     --input: 215 20% 24%;
     --ring: 187 85% 45%;
+
+    /* VINSA Dark Mode */
+    --vinsa-cyan: 187 100% 60%;
+    --vinsa-purple: 270 70% 70%;
+    --glass-bg: 215 25% 16% / 0.8;
+    --glass-border: 215 25% 30% / 0.4;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -125,6 +133,90 @@ All colors MUST be HSL.
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 700;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Utilities */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+  }
+
+  .glass-dark {
+    background: hsl(215 25% 10% / 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(215 25% 20% / 0.5);
+  }
+
+  /* VINSA Glow Effects */
+  .vinsa-glow {
+    box-shadow: 
+      0 0 20px hsl(var(--vinsa-cyan) / 0.3),
+      0 0 40px hsl(var(--vinsa-purple) / 0.2);
+  }
+
+  .vinsa-glow-strong {
+    box-shadow: 
+      0 0 30px hsl(var(--vinsa-cyan) / 0.5),
+      0 0 60px hsl(var(--vinsa-purple) / 0.3);
+  }
+
+  .vinsa-gradient-text {
+    background: linear-gradient(135deg, hsl(var(--vinsa-cyan)), hsl(var(--vinsa-purple)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .vinsa-gradient-bg {
+    background: linear-gradient(135deg, hsl(var(--vinsa-cyan) / 0.1), hsl(var(--vinsa-purple) / 0.1));
+  }
+
+  .vinsa-border-gradient {
+    border: 2px solid transparent;
+    background: 
+      linear-gradient(hsl(var(--card)), hsl(var(--card))) padding-box,
+      linear-gradient(135deg, hsl(var(--vinsa-cyan)), hsl(var(--vinsa-purple))) border-box;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px hsl(var(--vinsa-cyan) / 0.3),
+      0 0 40px hsl(var(--vinsa-purple) / 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px hsl(var(--vinsa-cyan) / 0.5),
+      0 0 60px hsl(var(--vinsa-purple) / 0.4);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 
