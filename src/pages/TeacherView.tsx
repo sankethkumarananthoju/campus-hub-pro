@@ -3,8 +3,9 @@ import { CreateAssignment } from '@/components/teacher/CreateAssignment';
 import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
 import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
 import { SemesterPlanner } from '@/components/teacher/SemesterPlanner';
+import { TeacherProfile } from '@/components/teacher/TeacherProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardCheck, FileText, Sparkles, BookOpen, Calendar } from 'lucide-react';
+import { ClipboardCheck, FileText, Sparkles, BookOpen, Calendar, User } from 'lucide-react';
 
 export default function TeacherView() {
   return (
@@ -15,8 +16,12 @@ export default function TeacherView() {
           <p className="text-muted-foreground">Manage passes, assignments, and use VINSA AI Assistant</p>
         </div>
 
-        <Tabs defaultValue="vinsa" className="space-y-6">
+        <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="glass flex-wrap">
+            <TabsTrigger value="profile" className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              My Profile
+            </TabsTrigger>
             <TabsTrigger value="vinsa" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               VINSA Chat
@@ -38,6 +43,10 @@ export default function TeacherView() {
               Create Assignment
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="profile">
+            <TeacherProfile />
+          </TabsContent>
 
           <TabsContent value="vinsa">
             <VinsaAssistant />

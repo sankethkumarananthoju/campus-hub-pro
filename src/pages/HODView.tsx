@@ -4,13 +4,14 @@ import { CreateAssignment } from '@/components/teacher/CreateAssignment';
 import { PeriodTimingManager } from '@/components/hod/PeriodTimingManager';
 import { TimetableManager } from '@/components/hod/TimetableManager';
 import { SubjectManager } from '@/components/hod/SubjectManager';
+import { AddTeacher } from '@/components/hod/AddTeacher';
 import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
 import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
 import { SemesterPlanner } from '@/components/teacher/SemesterPlanner';
 import { useApp } from '@/contexts/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Users, TrendingUp, Sparkles, BookOpen, Calendar } from 'lucide-react';
+import { FileText, Users, TrendingUp, Sparkles, BookOpen, Calendar, UserPlus } from 'lucide-react';
 
 export default function HODView() {
   const { assignments, submissions, passRequests } = useApp();
@@ -73,6 +74,10 @@ export default function HODView() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="glass flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="teachers" className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              Manage Teachers
+            </TabsTrigger>
             <TabsTrigger value="vinsa" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               VINSA Chat
@@ -92,6 +97,10 @@ export default function HODView() {
 
           <TabsContent value="overview" className="space-y-6">
             <PerformanceAnalytics />
+          </TabsContent>
+
+          <TabsContent value="teachers">
+            <AddTeacher />
           </TabsContent>
 
           <TabsContent value="vinsa">

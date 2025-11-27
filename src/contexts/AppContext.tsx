@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry, SubjectMaster, QuestionBankItem } from '@/types';
+import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry, SubjectMaster, QuestionBankItem, Teacher } from '@/types';
 
 interface AppContextType {
   currentRole: UserRole;
@@ -25,6 +25,11 @@ interface AppContextType {
   questionBank: QuestionBankItem[];
   addToQuestionBank: (question: QuestionBankItem) => void;
   removeFromQuestionBank: (id: string) => void;
+  // Teachers
+  teachers: Teacher[];
+  addTeacher: (teacher: Omit<Teacher, 'id' | 'joinedAt'>) => void;
+  updateTeacher: (id: string, updates: Partial<Teacher>) => void;
+  removeTeacher: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -96,6 +101,27 @@ const defaultPeriodTimings: PeriodTiming[] = [
 
 const mockTimetableEntries: TimetableEntry[] = [];
 
+const mockTeachers: Teacher[] = [
+  {
+    id: 'T001',
+    name: 'Dr. Rajesh Kumar',
+    email: 'rajesh.kumar@college.edu',
+    phone: '9876543210',
+    assignedSubject: 'Data Structures',
+    assignedYear: 2,
+    assignedClass: '2-A',
+    joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365)
+  },
+  {
+    id: 'T002',
+    name: 'Prof. Anita Singh',
+    email: 'anita.singh@college.edu',
+    assignedSubject: 'Machine Learning',
+    assignedYear: 4,
+    joinedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 200)
+  }
+];
+
 const defaultSubjectsByYear: SubjectMaster[] = [
   {
     year: 1,
@@ -156,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>(mockTimetableEntries);
   const [subjectsByYear, setSubjectsByYear] = useState<SubjectMaster[]>(defaultSubjectsByYear);
   const [questionBank, setQuestionBank] = useState<QuestionBankItem[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>(mockTeachers);
 
   // Simulate current user based on role
   const getCurrentUser = () => {
@@ -250,6 +277,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setQuestionBank(prev => prev.filter(q => q.id !== id));
   };
 
+  // Teacher functions
+  const addTeacher = (teacher: Omit<Teacher, 'id' | 'joinedAt'>) => {
+    const newTeacher: Teacher = {
+      ...teacher,
+      id: `T${Date.now()}`,
+      joinedAt: new Date()
+    };
+    setTeachers(prev => [...prev, newTeacher]);
+  };
+
+  const updateTeacher = (id: string, updates: Partial<Teacher>) => {
+    setTeachers(prev =>
+      prev.map(teacher => (teacher.id === id ? { ...teacher, ...updates } : teacher))
+    );
+  };
+
+  const removeTeacher = (id: string) => {
+    setTeachers(prev => prev.filter(teacher => teacher.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -275,6 +322,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         questionBank,
         addToQuestionBank,
         removeFromQuestionBank,
+        teachers,
+        addTeacher,
+        updateTeacher,
+        removeTeacher,
       }}
     >
       {children}
