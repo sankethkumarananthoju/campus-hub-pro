@@ -458,6 +458,21 @@ export function VinsaAssistant() {
                   </div>
                 </div>
               ))}
+              
+              {/* Typing Indicator */}
+              {(isChatting || isLoading) && (
+                <div className="flex gap-3 justify-start">
+                  <VinsaAvatar size="sm" isThinking />
+                  <div className="glass rounded-2xl p-4 flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <span className="w-2 h-2 bg-vinsa-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-vinsa-purple rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-vinsa-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-sm text-muted-foreground ml-2">VINSA is typing...</span>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
