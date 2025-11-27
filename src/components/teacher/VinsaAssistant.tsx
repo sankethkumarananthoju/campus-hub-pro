@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { VinsaAvatar } from './VinsaAvatar';
 import { useVinsaAI } from '@/hooks/useVinsaAI';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { useApp } from '@/contexts/AppContext';
+import { supabase } from '@/integrations/supabase/client';
 import { QuestionBankItem, VinsaChatMessage, Question } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,23 +12,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Sparkles, BookOpen, Save, Plus, CheckCircle, XCircle, Zap, Brain, Target } from 'lucide-react';
+import { Send, Sparkles, BookOpen, Save, Plus, CheckCircle, XCircle, Zap, Brain, Target, Volume2, VolumeX, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function VinsaAssistant() {
   const { subjectsByYear, addToQuestionBank, addAssignment, currentUserID, currentUserName } = useApp();
   const { isLoading, generateQuestions } = useVinsaAI();
+  const { speak, stop, isSpeaking, isLoading: isSpeechLoading } = useTextToSpeech();
   const { toast } = useToast();
 
   const [messages, setMessages] = useState<VinsaChatMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! I'm VINSA, your AI Assignment Assistant. I can generate questions on any topic across all subjects. Tell me what you need!",
+      content: "Hey there! 👋 I'm VINSA, your friendly AI teaching assistant! I can generate questions, help plan your semester, or just chat about anything education-related. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
 
+  const [chatInput, setChatInput] = useState('');
+  const [isChatting, setIsChatting] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [topic, setTopic] = useState('');
@@ -35,11 +40,57 @@ export function VinsaAssistant() {
   const [questionTypes, setQuestionTypes] = useState<('multiple-choice' | 'fill-blank' | 'short-answer')[]>(['multiple-choice']);
   const [generatedQuestions, setGeneratedQuestions] = useState<QuestionBankItem[]>([]);
   const [selectedQuestions, setSelectedQuestions] = useState<Set<string>>(new Set());
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
 
   const allSubjects = subjectsByYear.flatMap((y) => y.subjects);
   const filteredSubjects = selectedYear
     ? subjectsByYear.find((y) => y.year.toString() === selectedYear)?.subjects || []
     : allSubjects;
+
+  const handleChat = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage: VinsaChatMessage = {
+      id: `msg_${Date.now()}`,
+      role: 'user',
+      content: chatInput,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setChatInput('');
+    setIsChatting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('vinsa-chat', {
+        body: { message: chatInput, context: 'Teacher assistance' },
+      });
+
+      if (error) throw error;
+
+      const assistantMessage: VinsaChatMessage = {
+        id: `msg_${Date.now() + 1}`,
+        role: 'assistant',
+        content: data.response || "Hmm, I'm not sure how to respond to that. Could you rephrase?",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+
+      // Auto-play voice if enabled
+      if (voiceEnabled && data.response) {
+        speak(data.response);
+      }
+    } catch (err) {
+      const errorMessage: VinsaChatMessage = {
+        id: `msg_${Date.now() + 1}`,
+        role: 'assistant',
+        content: "Oops! Something went wrong on my end. Let me try again in a moment! 😅",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsChatting(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!selectedSubject || !topic) {
@@ -71,22 +122,36 @@ export function VinsaAssistant() {
       setGeneratedQuestions(questions);
       setSelectedQuestions(new Set(questions.map((q) => q.id)));
 
+      const responseText = `Awesome! 🎉 I've whipped up ${questions.length} questions for you on ${topic}! Take a look below and save the ones you love to your Question Bank.`;
+      
       const assistantMessage: VinsaChatMessage = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: `I've generated ${questions.length} questions for you! Review them below and save the ones you like to your Question Bank.`,
+        content: responseText,
         timestamp: new Date(),
         questions,
       };
       setMessages((prev) => [...prev, assistantMessage]);
+
+      if (voiceEnabled) {
+        speak(responseText);
+      }
     } catch (err) {
       const errorMessage: VinsaChatMessage = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${err instanceof Error ? err.message : 'Unknown error'}. Please try again.`,
+        content: `Oops! Hit a snag: ${err instanceof Error ? err.message : 'Unknown error'}. Let's try that again! 💪`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
+
+  const playMessage = (text: string) => {
+    if (isSpeaking) {
+      stop();
+    } else {
+      speak(text);
     }
   };
 
@@ -105,7 +170,7 @@ export function VinsaAssistant() {
   const saveToQuestionBank = (question: QuestionBankItem) => {
     addToQuestionBank(question);
     toast({
-      title: 'Saved!',
+      title: 'Saved! 🎯',
       description: 'Question added to your Question Bank.',
     });
   };
@@ -114,7 +179,7 @@ export function VinsaAssistant() {
     const selected = generatedQuestions.filter((q) => selectedQuestions.has(q.id));
     selected.forEach((q) => addToQuestionBank(q));
     toast({
-      title: 'Saved!',
+      title: 'All Saved! 🎉',
       description: `${selected.length} questions added to your Question Bank.`,
     });
   };
@@ -151,7 +216,7 @@ export function VinsaAssistant() {
     });
 
     toast({
-      title: 'Assignment Created!',
+      title: 'Assignment Created! 📚',
       description: `Assignment with ${selected.length} questions has been created.`,
     });
   };
@@ -169,15 +234,28 @@ export function VinsaAssistant() {
         {/* VINSA Header */}
         <div className="glass rounded-2xl p-6 vinsa-border-gradient">
           <div className="flex items-center gap-4">
-            <VinsaAvatar size="lg" isThinking={isLoading} />
+            <VinsaAvatar size="lg" isThinking={isLoading || isChatting} />
             <div>
               <h2 className="text-2xl font-bold vinsa-gradient-text">VINSA</h2>
-              <p className="text-sm text-muted-foreground">AI Assignment Assistant</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className={cn('w-2 h-2 rounded-full', isLoading ? 'bg-warning animate-pulse' : 'bg-success')} />
-                <span className="text-xs text-muted-foreground">{isLoading ? 'Thinking...' : 'Online'}</span>
+              <p className="text-sm text-muted-foreground">Your AI Teaching Buddy</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn('w-2 h-2 rounded-full', isLoading || isChatting ? 'bg-warning animate-pulse' : 'bg-success')} />
+                <span className="text-xs text-muted-foreground">{isLoading || isChatting ? 'Thinking...' : 'Ready to help!'}</span>
               </div>
             </div>
+          </div>
+          
+          {/* Voice Toggle */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
+            <span className="text-sm text-muted-foreground">Voice Responses</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setVoiceEnabled(!voiceEnabled)}
+              className={cn(voiceEnabled ? 'text-vinsa-cyan' : 'text-muted-foreground')}
+            >
+              {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </Button>
           </div>
         </div>
 
@@ -185,7 +263,7 @@ export function VinsaAssistant() {
         <div className="glass rounded-2xl p-6 space-y-4">
           <h3 className="font-semibold flex items-center gap-2">
             <Target className="w-4 h-4 text-vinsa-cyan" />
-            Configure Questions
+            Generate Questions
           </h3>
 
           <div className="space-y-3">
@@ -337,7 +415,7 @@ export function VinsaAssistant() {
       <div className="lg:col-span-2 space-y-4">
         {/* Chat Area */}
         <div className="glass rounded-2xl overflow-hidden vinsa-border-gradient">
-          <ScrollArea className="h-[500px] p-4">
+          <ScrollArea className="h-[400px] p-4">
             <div className="space-y-4">
               {messages.map((message) => (
                 <div
@@ -356,15 +434,52 @@ export function VinsaAssistant() {
                         : 'glass'
                     )}
                   >
-                    <p className="text-sm">{message.content}</p>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                      {message.timestamp.toLocaleTimeString()}
-                    </span>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-muted-foreground">
+                        {message.timestamp.toLocaleTimeString()}
+                      </span>
+                      {message.role === 'assistant' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => playMessage(message.content)}
+                          className="h-6 px-2"
+                          disabled={isSpeechLoading}
+                        >
+                          {isSpeaking ? (
+                            <VolumeX className="w-3 h-3" />
+                          ) : (
+                            <Volume2 className="w-3 h-3" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </ScrollArea>
+
+          {/* Chat Input */}
+          <div className="p-4 border-t border-border/50">
+            <div className="flex gap-2">
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask me anything... (e.g., 'How are you?' or 'Help me plan my week')"
+                className="glass border-0"
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleChat()}
+              />
+              <Button
+                onClick={handleChat}
+                disabled={isChatting || !chatInput.trim()}
+                className="bg-gradient-to-r from-vinsa-cyan to-vinsa-purple"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Generated Questions */}
@@ -387,7 +502,7 @@ export function VinsaAssistant() {
               </div>
             </div>
 
-            <ScrollArea className="h-[300px]">
+            <ScrollArea className="h-[250px]">
               <div className="space-y-3">
                 {generatedQuestions.map((q, idx) => (
                   <div
