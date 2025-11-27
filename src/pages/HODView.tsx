@@ -6,10 +6,11 @@ import { TimetableManager } from '@/components/hod/TimetableManager';
 import { SubjectManager } from '@/components/hod/SubjectManager';
 import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
 import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
+import { SemesterPlanner } from '@/components/teacher/SemesterPlanner';
 import { useApp } from '@/contexts/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Users, TrendingUp, Sparkles, BookOpen } from 'lucide-react';
+import { FileText, Users, TrendingUp, Sparkles, BookOpen, Calendar } from 'lucide-react';
 
 export default function HODView() {
   const { assignments, submissions, passRequests } = useApp();
@@ -70,11 +71,15 @@ export default function HODView() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="glass">
+          <TabsList className="glass flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="vinsa" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              VINSA Assistant
+              VINSA Chat
+            </TabsTrigger>
+            <TabsTrigger value="semester" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Semester Planner
             </TabsTrigger>
             <TabsTrigger value="question-bank" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -91,6 +96,10 @@ export default function HODView() {
 
           <TabsContent value="vinsa">
             <VinsaAssistant />
+          </TabsContent>
+
+          <TabsContent value="semester">
+            <SemesterPlanner />
           </TabsContent>
 
           <TabsContent value="question-bank">

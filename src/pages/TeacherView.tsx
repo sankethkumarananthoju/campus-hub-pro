@@ -2,8 +2,9 @@ import { PassApprovalQueue } from '@/components/teacher/PassApprovalQueue';
 import { CreateAssignment } from '@/components/teacher/CreateAssignment';
 import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
 import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
+import { SemesterPlanner } from '@/components/teacher/SemesterPlanner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardCheck, FileText, Sparkles, BookOpen } from 'lucide-react';
+import { ClipboardCheck, FileText, Sparkles, BookOpen, Calendar } from 'lucide-react';
 
 export default function TeacherView() {
   return (
@@ -15,10 +16,14 @@ export default function TeacherView() {
         </div>
 
         <Tabs defaultValue="vinsa" className="space-y-6">
-          <TabsList className="glass">
+          <TabsList className="glass flex-wrap">
             <TabsTrigger value="vinsa" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              VINSA Assistant
+              VINSA Chat
+            </TabsTrigger>
+            <TabsTrigger value="semester" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Semester Planner
             </TabsTrigger>
             <TabsTrigger value="question-bank" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -36,6 +41,10 @@ export default function TeacherView() {
 
           <TabsContent value="vinsa">
             <VinsaAssistant />
+          </TabsContent>
+
+          <TabsContent value="semester">
+            <SemesterPlanner />
           </TabsContent>
 
           <TabsContent value="question-bank">
