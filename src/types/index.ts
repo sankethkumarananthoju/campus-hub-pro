@@ -2,6 +2,17 @@ export type UserRole = 'student' | 'teacher' | 'hod';
 
 export type PassStatus = 'Pending' | 'Approved' | 'Denied';
 
+export interface Teacher {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  assignedSubject?: string;
+  assignedYear?: 1 | 2 | 3 | 4;
+  assignedClass?: string;
+  joinedAt: Date;
+}
+
 export interface PassRequest {
   id: string;
   studentID: string;
