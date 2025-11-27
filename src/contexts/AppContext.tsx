@@ -11,6 +11,8 @@ interface AppContextType {
   updatePassStatus: (id: string, status: 'Approved' | 'Denied', reviewedBy: string) => void;
   assignments: Assignment[];
   addAssignment: (assignment: Omit<Assignment, 'id' | 'createdAt'>) => void;
+  updateAssignment: (id: string, updates: Partial<Assignment>) => void;
+  deleteAssignment: (id: string) => void;
   submissions: Submission[];
   addSubmission: (submission: Omit<Submission, 'id' | 'correctedTime'>) => void;
   periodTimings: PeriodTiming[];
@@ -60,6 +62,7 @@ const mockAssignments: Assignment[] = [
     teacherID: 'T001',
     teacherName: 'Dr. Rajesh Kumar',
     classID: 'CS-2A',
+    targetYear: 2,
     title: 'Data Structures - Arrays & Linked Lists',
     description: 'Complete the following questions on basic data structures',
     questions: [
@@ -81,7 +84,8 @@ const mockAssignments: Assignment[] = [
     ],
     dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2),
     totalPoints: 20,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24)
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    isPublished: true
   }
 ];
 
@@ -227,6 +231,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setAssignments(prev => [newAssignment, ...prev]);
   };
 
+  const updateAssignment = (id: string, updates: Partial<Assignment>) => {
+    setAssignments(prev =>
+      prev.map(assignment => (assignment.id === id ? { ...assignment, ...updates } : assignment))
+    );
+  };
+
+  const deleteAssignment = (id: string) => {
+    setAssignments(prev => prev.filter(assignment => assignment.id !== id));
+  };
+
   const addSubmission = (submission: Omit<Submission, 'id' | 'correctedTime'>) => {
     const newSubmission: Submission = {
       ...submission,
@@ -309,6 +323,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updatePassStatus,
         assignments,
         addAssignment,
+        updateAssignment,
+        deleteAssignment,
         submissions,
         addSubmission,
         periodTimings,
