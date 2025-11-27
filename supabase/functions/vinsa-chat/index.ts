@@ -20,6 +20,35 @@ serve(async (req) => {
 
     console.log(`VINSA chat: "${message.substring(0, 50)}..."`);
 
+    // Parse context data if available
+    let contextInfo = '';
+    try {
+      const contextData = context ? JSON.parse(context) : null;
+      if (contextData) {
+        const { pendingRequests, performanceByYear, totalSubmissions, totalAssignments } = contextData;
+        
+        if (pendingRequests && pendingRequests.length > 0) {
+          contextInfo += `\n\nPENDING PASS REQUESTS (${pendingRequests.length} total):\n`;
+          pendingRequests.forEach((req: any, i: number) => {
+            contextInfo += `${i + 1}. ${req.studentName} - "${req.reason}" (requested: ${new Date(req.requestedTime).toLocaleString()})\n`;
+          });
+        } else {
+          contextInfo += '\n\nNo pending pass requests at the moment.';
+        }
+        
+        if (performanceByYear && Object.keys(performanceByYear).length > 0) {
+          contextInfo += '\n\nSTUDENT PERFORMANCE BY YEAR:\n';
+          Object.entries(performanceByYear).forEach(([year, data]: [string, any]) => {
+            contextInfo += `- Year ${year}: Average score ${data.avgScore}% across ${data.submissions} submissions\n`;
+          });
+        }
+        
+        contextInfo += `\n\nOVERALL: ${totalAssignments} assignments created, ${totalSubmissions} submissions received.`;
+      }
+    } catch (e) {
+      contextInfo = context || 'General conversation';
+    }
+
     const systemPrompt = `You are VINSA (Virtual Intelligent Smart Assistant), a friendly, playful, and helpful AI assistant for teachers and HODs in an educational institution.
 
 YOUR PERSONALITY:
@@ -38,6 +67,8 @@ CAPABILITIES:
 4. Provide teaching tips and strategies
 5. Assist with timetable planning
 6. Answer general education-related queries
+7. Report on pending student pass requests
+8. Provide student performance analytics by year
 
 RESPONSE STYLE:
 - Keep responses concise but friendly
@@ -46,7 +77,7 @@ RESPONSE STYLE:
 - If you don't know something, admit it cheerfully
 - Always offer to help with more
 
-CONTEXT: ${context || 'General conversation'}
+CURRENT DATA:${contextInfo}
 
 Remember: You're not just an AI - you're a supportive teaching companion! 🎓`;
 

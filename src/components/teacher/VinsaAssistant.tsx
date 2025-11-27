@@ -16,7 +16,7 @@ import { Send, Sparkles, BookOpen, Save, Plus, CheckCircle, XCircle, Zap, Brain,
 import { cn } from '@/lib/utils';
 
 export function VinsaAssistant() {
-  const { subjectsByYear, addToQuestionBank, addAssignment, currentUserID, currentUserName } = useApp();
+  const { subjectsByYear, addToQuestionBank, addAssignment, currentUserID, currentUserName, passRequests, submissions, assignments } = useApp();
   const { isLoading, generateQuestions } = useVinsaAI();
   const { speak, stop, isSpeaking, isLoading: isSpeechLoading } = useTextToSpeech();
   const { toast } = useToast();
@@ -72,8 +72,55 @@ export function VinsaAssistant() {
     setIsChatting(true);
 
     try {
+      // Build context with pending requests and student performance
+      const pendingRequests = passRequests.filter(r => r.status === 'Pending');
+      
+      // Calculate performance by year
+      const getYearFromClassID = (classID: string): number => {
+        const match = classID.match(/(\d)/);
+        return match ? parseInt(match[1]) : 0;
+      };
+      
+      const assignmentClassMap = new Map<string, string>();
+      assignments.forEach(a => assignmentClassMap.set(a.id, a.classID));
+      
+      const performanceByYear: Record<number, { students: number; avgScore: number; submissions: number }> = {};
+      submissions.forEach(sub => {
+        const classID = assignmentClassMap.get(sub.assignmentID) || '';
+        const year = getYearFromClassID(classID);
+        if (year > 0) {
+          if (!performanceByYear[year]) {
+            performanceByYear[year] = { students: 0, avgScore: 0, submissions: 0 };
+          }
+          performanceByYear[year].avgScore += sub.percentage;
+          performanceByYear[year].submissions += 1;
+        }
+      });
+      
+      // Calculate averages
+      Object.keys(performanceByYear).forEach(year => {
+        const y = Number(year);
+        if (performanceByYear[y].submissions > 0) {
+          performanceByYear[y].avgScore = Math.round(performanceByYear[y].avgScore / performanceByYear[y].submissions);
+        }
+      });
+      
+      const contextData = {
+        pendingRequests: pendingRequests.map(r => ({
+          studentName: r.studentName,
+          reason: r.reason,
+          requestedTime: r.requestedTime
+        })),
+        performanceByYear,
+        totalSubmissions: submissions.length,
+        totalAssignments: assignments.length
+      };
+      
       const { data, error } = await supabase.functions.invoke('vinsa-chat', {
-        body: { message: chatInput, context: 'Teacher assistance' },
+        body: { 
+          message: chatInput, 
+          context: JSON.stringify(contextData)
+        },
       });
 
       if (error) throw error;
