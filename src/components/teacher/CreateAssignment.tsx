@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { FilePlus, Plus, Trash2, GraduationCap } from 'lucide-react';
+import { FilePlus, Plus, Trash2, GraduationCap, Clock, Send } from 'lucide-react';
 import { Question } from '@/types';
 
 // Classes organized by year
@@ -27,6 +28,8 @@ export function CreateAssignment() {
   const [description, setDescription] = useState('');
   const [classID, setClassID] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
   const [questions, setQuestions] = useState<Partial<Question>[]>([
     { type: 'multiple-choice', question: '', correctAnswer: '', points: 10, options: ['', '', '', ''] }
   ]);
@@ -75,22 +78,36 @@ export function CreateAssignment() {
       return;
     }
 
+    if (scheduleEnabled && !scheduledDate) {
+      toast({
+        title: 'Error',
+        description: 'Please select a schedule date and time',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     const totalPoints = questions.reduce((sum, q) => sum + (q.points || 0), 0);
 
     addAssignment({
       teacherID: currentUserID,
       teacherName: currentUserName,
       classID,
+      targetYear: parseInt(selectedYear) as 1 | 2 | 3 | 4,
       title,
       description,
       questions: questions as Question[],
       dueDate: new Date(dueDate),
-      totalPoints
+      totalPoints,
+      isPublished: !scheduleEnabled,
+      scheduledAt: scheduleEnabled ? new Date(scheduledDate) : undefined
     });
 
     toast({
-      title: 'Assignment Created',
-      description: `${title} has been posted to Year ${selectedYear} - ${classID}`,
+      title: scheduleEnabled ? 'Assignment Scheduled' : 'Assignment Created',
+      description: scheduleEnabled 
+        ? `${title} will be pushed to Year ${selectedYear} students at the scheduled time`
+        : `${title} has been posted to Year ${selectedYear} - ${classID}`,
     });
 
     // Reset form
@@ -99,6 +116,8 @@ export function CreateAssignment() {
     setSelectedYear('');
     setClassID('');
     setDueDate('');
+    setScheduleEnabled(false);
+    setScheduledDate('');
     setQuestions([{ type: 'multiple-choice', question: '', correctAnswer: '', points: 10, options: ['', '', '', ''] }]);
   };
 
@@ -179,6 +198,41 @@ export function CreateAssignment() {
                 </Select>
               </div>
             </div>
+          </div>
+
+          {/* Scheduling Options */}
+          <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <Label className="font-medium">Schedule Assignment</Label>
+              </div>
+              <Switch
+                checked={scheduleEnabled}
+                onCheckedChange={setScheduleEnabled}
+              />
+            </div>
+            {scheduleEnabled ? (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledDate">Push to Students At</Label>
+                  <Input
+                    id="scheduledDate"
+                    type="datetime-local"
+                    value={scheduledDate}
+                    onChange={(e) => setScheduledDate(e.target.value)}
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  The assignment will be automatically pushed to Year {selectedYear || '?'} students at this time.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Send className="h-4 w-4" />
+                Assignment will be published immediately after creation.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -284,7 +338,17 @@ export function CreateAssignment() {
           </div>
 
           <Button type="submit" className="w-full">
-            Create Assignment
+            {scheduleEnabled ? (
+              <>
+                <Clock className="h-4 w-4 mr-2" />
+                Schedule Assignment
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4 mr-2" />
+                Create & Publish Assignment
+              </>
+            )}
           </Button>
         </form>
       </CardContent>

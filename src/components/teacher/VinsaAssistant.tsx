@@ -266,11 +266,13 @@ export function VinsaAssistant() {
       teacherID: currentUserID,
       teacherName: currentUserName,
       classID: 'CS-2A',
+      targetYear: 2,
       title: `${selectedSubject} - ${topic}`,
       description: `Auto-generated assignment on ${topic}`,
       questions: assignmentQuestions,
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       totalPoints: assignmentQuestions.reduce((sum, q) => sum + q.points, 0),
+      isPublished: true
     });
 
     toast({

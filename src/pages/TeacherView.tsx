@@ -1,11 +1,12 @@
 import { PassApprovalQueue } from '@/components/teacher/PassApprovalQueue';
 import { CreateAssignment } from '@/components/teacher/CreateAssignment';
+import { AssignmentScheduler } from '@/components/teacher/AssignmentScheduler';
 import { VinsaAssistant } from '@/components/teacher/VinsaAssistant';
 import { QuestionBankViewer } from '@/components/teacher/QuestionBankViewer';
 import { SemesterPlanner } from '@/components/teacher/SemesterPlanner';
 import { TeacherProfile } from '@/components/teacher/TeacherProfile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ClipboardCheck, FileText, Sparkles, BookOpen, Calendar, User } from 'lucide-react';
+import { ClipboardCheck, FileText, Sparkles, BookOpen, Calendar, User, CalendarClock } from 'lucide-react';
 
 export default function TeacherView() {
   return (
@@ -42,6 +43,10 @@ export default function TeacherView() {
               <FileText className="w-4 h-4" />
               Create Assignment
             </TabsTrigger>
+            <TabsTrigger value="scheduler" className="flex items-center gap-2">
+              <CalendarClock className="w-4 h-4" />
+              Schedule Manager
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
@@ -66,6 +71,10 @@ export default function TeacherView() {
 
           <TabsContent value="assignments">
             <CreateAssignment />
+          </TabsContent>
+
+          <TabsContent value="scheduler">
+            <AssignmentScheduler />
           </TabsContent>
         </Tabs>
       </div>

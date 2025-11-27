@@ -38,12 +38,15 @@ export interface Assignment {
   teacherID: string;
   teacherName: string;
   classID: string;
+  targetYear: 1 | 2 | 3 | 4;
   title: string;
   description: string;
   questions: Question[];
   dueDate: Date;
   totalPoints: number;
   createdAt: Date;
+  scheduledAt?: Date;
+  isPublished: boolean;
 }
 
 export interface Submission {
