@@ -82,3 +82,27 @@ export interface SubjectMaster {
   year: 1 | 2 | 3 | 4;
   subjects: string[];
 }
+
+// VINSA Question Bank Types
+export interface QuestionBankItem {
+  id: string;
+  subject: string;
+  topic: string;
+  question: string;
+  type: 'multiple-choice' | 'fill-blank' | 'short-answer';
+  options?: string[];
+  correctAnswer: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  points: number;
+  tags?: string[];
+  createdAt: Date;
+  source: 'ai' | 'manual';
+}
+
+export interface VinsaChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  questions?: QuestionBankItem[];
+}

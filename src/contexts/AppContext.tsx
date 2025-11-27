@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry, SubjectMaster } from '@/types';
+import { UserRole, PassRequest, Assignment, Submission, PeriodTiming, TimetableEntry, SubjectMaster, QuestionBankItem } from '@/types';
 
 interface AppContextType {
   currentRole: UserRole;
@@ -21,6 +21,10 @@ interface AppContextType {
   deleteTimetableEntry: (id: string) => void;
   subjectsByYear: SubjectMaster[];
   updateSubjectsByYear: (subjects: SubjectMaster[]) => void;
+  // Question Bank
+  questionBank: QuestionBankItem[];
+  addToQuestionBank: (question: QuestionBankItem) => void;
+  removeFromQuestionBank: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -151,6 +155,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [periodTimings, setPeriodTimings] = useState<PeriodTiming[]>(defaultPeriodTimings);
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>(mockTimetableEntries);
   const [subjectsByYear, setSubjectsByYear] = useState<SubjectMaster[]>(defaultSubjectsByYear);
+  const [questionBank, setQuestionBank] = useState<QuestionBankItem[]>([]);
 
   // Simulate current user based on role
   const getCurrentUser = () => {
@@ -230,6 +235,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSubjectsByYear(subjects);
   };
 
+  // Question Bank functions
+  const addToQuestionBank = (question: QuestionBankItem) => {
+    setQuestionBank(prev => {
+      // Avoid duplicates
+      if (prev.some(q => q.id === question.id)) {
+        return prev;
+      }
+      return [question, ...prev];
+    });
+  };
+
+  const removeFromQuestionBank = (id: string) => {
+    setQuestionBank(prev => prev.filter(q => q.id !== id));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -251,7 +271,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateTimetableEntry,
         deleteTimetableEntry,
         subjectsByYear,
-        updateSubjectsByYear
+        updateSubjectsByYear,
+        questionBank,
+        addToQuestionBank,
+        removeFromQuestionBank,
       }}
     >
       {children}
